@@ -22,6 +22,8 @@ brew install fd
 brew install mmv
 # tailscale 比较好用, 替代 frp 也可以
 brew install tailscale
+# 简单容器
+brew install http-server
 
 # Remove outdated versions from the cellar.
 brew cleanup

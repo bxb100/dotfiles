@@ -6,8 +6,8 @@ git pull origin main;
 
 function doIt() {
 	rsync --exclude ".git/" \
-	  --exclude ".vim" \
 	  --exclude ".java_profile" \
+	  --exclude "brew.sh" \
 		--exclude ".DS_Store" \
 		--exclude "bootstrap.sh" \
 		--exclude ".macos" \
