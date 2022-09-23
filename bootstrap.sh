@@ -6,16 +6,19 @@ git pull origin main;
 
 function doIt() {
 	rsync --exclude ".git/" \
+	  --exclude ".vim" \
+	  --exclude ".java_profile" \
 		--exclude ".DS_Store" \
-		--exclude ".osx" \
 		--exclude "bootstrap.sh" \
+		--exclude ".macos" \
 		--exclude "README.md" \
 		--exclude "LICENSE-MIT.txt" \
 		-avh --no-perms . ~;
-	source ~/.bash_profile;
+	zsh;source ~/.zshrc;
+	# source ~/.bash_profile;
 }
 
-if [ "$1" == "--force" -o "$1" == "-f" ]; then
+if [ "$1" == "--force" ] || [ "$1" == "-f" ]; then
 	doIt;
 else
 	read -p "This may overwrite existing files in your home directory. Are you sure? (y/n) " -n 1;

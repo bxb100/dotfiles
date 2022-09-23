@@ -1,0 +1,156 @@
+" 主要leader
+let mapleader=' '
+
+
+""" Plugins  --------------------------------
+set surround
+set multiple-cursors
+set commentary
+set argtextobj
+set easymotion
+set textobj-entire
+set ReplaceWithRegister
+set exchange
+set vim-paragraph-motion
+set textobj-indent
+set NERDTree
+""" Plugin settings -------------------------
+let g:argtextobj_pairs="[:],(:),<:>"
+
+
+""" Common settings -------------------------
+" 搜索高亮
+set hlsearch
+" 模式搜索实时预览，增量搜索
+set incsearch
+" 忽略大小写
+set ignorecase
+" 智能忽略大小写
+set smartcase
+" 显示当前的模式
+set showmode
+" 显示当前行号
+set number
+
+set scrolloff=5
+" 设置命令历史记录条数
+set history=100
+" 共享系统粘贴板
+set clipboard=unnamed
+" 基于缩进或语法进行代码折叠
+set foldmethod=syntax
+" 启动vim 时关闭折叠代码
+set nofoldenable
+" 关闭兼容vi
+set nocompatible
+" 开启高亮语法
+syntax enable
+" 允许使用指定语法高亮配色方案替换默认方案
+syntax on
+" vim 智能命令行模式智能不全
+set wildmenu
+" 总是显示状态栏
+set laststatus=2
+" 显示光标当前位置
+set ruler
+" 禁止折行
+set nowrap
+" 将制表符扩展为空格
+set expandtab
+
+
+" 设置编辑时制表符占用空格数
+set shiftwidth=1
+" 中英文自动切换，开启美式键盘
+set keep-english-in-normal-and-restore-in-insert
+
+
+""" Idea specific settings ------------------
+set ideajoin
+
+
+""" Strict mode for development ---------------
+set ideastrictmode
+""""""""""""""""""""""""""""""""""""""easymotion""""""""""""""""""""""""""""""""
+
+
+""""""""""""""""""""""""""""""""""""""effective""""""""""""""""""""""""""""""""
+nnoremap <Leader>sw :action SurroundWith<CR>
+nnoremap <Leader>oi :action OptimizeImports<CR>
+nnoremap <Leader>tz :action ToggleZenMode<CR>
+nnoremap <leader>ns :action NewScratchFile<CR>
+nnoremap <Leader>ic :action InspectCode<CR>
+" 断行
+nnoremap <CR> a<CR><Esc>k$
+" I think it's a better solution
+nnoremap U <C-R>
+nnoremap dam :action MethodUp<CR>f{vi{:g/^$/d<CR>dap
+""""""""""""""""""""""""""""""""""""""Window""""""""""""""""""""""""""""""""
+nnoremap <Leader>ww <C-W>w
+nnoremap <Leader>wd <C-W>c
+nnoremap <Leader>wj <C-W>j
+nnoremap <Leader>wk <C-W>k
+nnoremap <Leader>wh <C-W>h
+nnoremap <Leader>wl <C-W>l
+nnoremap <Leader>ws <C-W>s
+nnoremap <Leader>wv <C-W>v
+nnoremap <Leader>ot :action ActivateTerminalToolWindow<CR>
+""""""""""""""""""""""""""""""""""""""Fix""""""""""""""""""""""""""""""""
+nnoremap <Leader>fd :action FixDocComment<CR>
+nnoremap <Leader>me :action RenameElement<CR>
+nnoremap <Leader>mf :action RenameFile<CR>
+nnoremap <Leader>fc :action ReformatCode<CR>
+vnoremap <Leader>em :action ExtractMethod<CR>
+vnoremap <Leader>ei :action ExtractInterface<CR>
+""""""""""""""""""""""""""""""""""""""Vcs""""""""""""""""""""""""""""""""
+nnoremap <Leader>vp :action Vcs.QuickListPopupAction<CR>
+nnoremap <Leader>vb :action Vcs.ShowBranches<CR>
+nnoremap <leader>vh :action Vcs.ShowTabbedFileHistory<CR>
+""""""""""""""""""""""""""""""""""""""Generate""""""""""""""""""""""""""""""""
+nnoremap <Leader>im :action ImplementMethods<CR>
+nnoremap <Leader>om :action OverrideMethods<CR>
+nnoremap <Leader>nc :action NewClass<CR>
+""""""""""""""""""""""""""""""""""""""Debug""""""""""""""""""""""""""""""""
+nnoremap <leader>tb :action ToggleLineBreakpoint<CR>
+nnoremap <Leader>sb :action ViewBreakpoints<CR>
+""""""""""""""""""""""""""""""""""""""Start and stop""""""""""""""""""""""""""""""""
+
+nnoremap <Leader>d :action Debug<CR>
+nnoremap <Leader>rc :action Stop<CR>
+nnoremap <Leader>rr :action Rerun<CR>
+nnoremap <Leader>rm :action RunClass<CR>
+nnoremap <Leader>cd :action ChooseDebugConfiguration<CR>
+nnoremap <Leader>cr :action ChooseRunConfiguration<CR>
+""""""""""""""""""""""""""""""""""""""Show""""""""""""""""""""""""""""""""
+nnoremap <Leader>sd :action ShowUmlDiagram<CR>
+nnoremap <Leader>th :action TypeHierarchy<CR>
+nnoremap <Leader>fu :action FindUsages<CR>
+nnoremap <Leader>su :action ShowUsages<CR>
+nnoremap <Leader>mh :action MethodHierarchy<CR>
+nnoremap <Leader>ss :action ShowSettings<CR>
+nnoremap <Leader>sp :action ShowFilePath<CR>
+nnoremap <Leader>se :action ShowErrorDescription<CR>
+nnoremap <Leader>rf :action RecentFiles<CR>
+nnoremap <Leader>jd :action QuickJavaDoc<CR>
+nnoremap <leader>a :action Annotate<CR>
+nnoremap <leader>sn :action ShowNavBar<CR>
+""""""""""""""""""""""""""""""""""""""popup""""""""""""""""""""""""""""""""
+nnoremap <Leader>ps :action FileStructurePopup<CR>
+nnoremap <leader>pg :action Generate<CR>
+nnoremap <Leader>pm :action ShowPopupMenu<CR>
+""""""""""""""""""""""""""""""""""""""Search""""""""""""""""""""""""""""""""
+nnoremap <Leader>ga :action GotoAction<CR>
+nnoremap <Leader>gc :action GotoClass<CR>
+nnoremap <Leader>gf :action GotoFile<CR>
+nnoremap <Leader>gs :action GotoSymbol<CR>
+""""""""""""""""""""""""""""""""""""""Jump""""""""""""""""""""""""""""""""
+nnoremap ge :action GotoNextError<CR>
+nnoremap gi :action GotoImplementation<CR>
+nnoremap gs :action GotoSuperMethod<CR>
+nnoremap ]] :action MethodDown<CR>
+nnoremap [[ :action MethodUp<CR>
+nnoremap gf :NERDTree <CR>
+" Tab operation
+nnoremap gn gt
+nnoremap gp gT
+" Find more examples here: https://jb.gg/share-ideavimrcset clipboard+=ideaput
