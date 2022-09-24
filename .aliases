@@ -40,6 +40,7 @@ alias update='sudo softwareupdate -i -a; brew update; brew upgrade; brew cleanup
 
 # Google Chrome
 alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
+alias tmpchrome='SSLKEYLOGFILE=/tmp/tmp-google/.ssl-key.log chrome --user-data-dir=/tmp/tmp-google'
 alias canary='/Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary'
 
 # IP addresses
