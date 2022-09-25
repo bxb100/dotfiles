@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cd "$(dirname "${BASH_SOURCE}")";
+cd "$(dirname "${BASH_SOURCE[0]}")" || exit;
 
 git pull origin main;
 
@@ -11,11 +11,17 @@ function doIt() {
 		--exclude ".DS_Store" \
 		--exclude "bootstrap.sh" \
 		--exclude ".macos" \
+		--exclude ".gitignore" \
+		--exclude ".gitignore_config" \
 		--exclude "README.md" \
 		--exclude "LICENSE-MIT.txt" \
 		-avh --no-perms . ~;
-	zsh;source ~/.zshrc;
-	# source ~/.bash_profile;
+	# 重命名配置
+	cp .gitignore_config ~/.gitignore;
+	# 使用 zsh 必须要在 zsh 环境下才能 
+	zsh;
+	# shellcheck source=/dev/null
+	source ~/.zshrc;
 }
 
 if [ "$1" == "--force" ] || [ "$1" == "-f" ]; then
