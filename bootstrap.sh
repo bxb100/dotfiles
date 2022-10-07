@@ -6,8 +6,8 @@ git pull origin main;
 
 function doIt() {
 	rsync --exclude ".git/" \
-	  --exclude ".java_profile" \
-	  --exclude "brew.sh" \
+		--exclude ".java_profile" \
+		--exclude "brew.sh" \
 		--exclude ".DS_Store" \
 		--exclude "bootstrap.sh" \
 		--exclude ".macos" \
@@ -15,6 +15,7 @@ function doIt() {
 		--exclude ".gitignore_config" \
 		--exclude "README.md" \
 		--exclude "LICENSE-MIT.txt" \
+		--exclude ".zshrc" \
 		-avh --no-perms . ~;
 	# 重命名配置
 	cp .gitignore_config ~/.gitignore;
