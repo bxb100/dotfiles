@@ -161,3 +161,24 @@ function o() {
 function tre() {
 	tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX;
 }
+
+# Checksum.sh is a simple way to download, review, and verify install scripts. If the checksum is OK the script will be printed to stdout, which can be piped to sh or elsewhere. If the checksum doesn't match it produces an error and nothing is piped.
+# For example, to install Rust:
+# checksum https://sh.rustup.rs 8327fa6ce106d2a387fdd02cb95c3607193c2edb | sh
+# source: https://github.com/gavinuhma/checksum.sh
+function checksum() {
+  s=$(curl -fsSL "$1")
+  if ! command -v shasum >/dev/null
+  then
+    shasum() { sha1sum "$@"; }
+  fi
+  c=$(printf %s\\n "$s" | shasum | awk '{print $1}')
+  if [ "$c" = "$2" ]
+  then
+    printf %s\\n "$s"
+  else
+    echo "invalid checksum $c != $2" 1>&2;
+  fi
+  unset s
+  unset c
+}
