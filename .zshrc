@@ -74,7 +74,6 @@ ZSH_THEME="robbyrussell"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
-	git
 	zsh-autosuggestions
 	zsh-syntax-highlighting
 )
@@ -124,6 +123,13 @@ source "$HOME/.cargo/env"
 
 # Pyenv
 export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-alias brew='env PATH="${PATH//$(pyenv root)\/shims:/}" brew'
+export PATH="$PATH:$PYENV_ROOT/shims"
+# https://blog.skk.moe/post/make-oh-my-zsh-fly/
+
+pyenv() {
+	unfunction pyenv
+
+	eval "$(pyenv init -)"
+
+	pyenv "$@"
+}
