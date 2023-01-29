@@ -182,3 +182,16 @@ function checksum() {
   unset s
   unset c
 }
+
+# Update all git repositories under the current path
+function gitup() {
+	for d in ${PWD}/*/; do
+		if [ -d "$d/.git" ]; then
+			echo "Updating $d…";
+			(
+				cd "$d" || exit;
+				git pull --prune;
+			);
+		fi;
+	done;
+}
