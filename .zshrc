@@ -6,6 +6,8 @@ export PATH=$HOME/.pyenv/shims:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/b
 export PATH=$PATH:/nix/var/nix/profiles/default/bin
 # Path to your oh-my-zsh installation.
 export ZSH=$HOME/.oh-my-zsh
+# ANTLR path
+export CLASSPATH=/opt/homebrew/Cellar/antlr/4.11.1/antlr-4.11.1-complete.jar:.
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -74,6 +76,7 @@ ZSH_THEME="robbyrussell"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
+	git
 	zsh-autosuggestions
 	zsh-syntax-highlighting
 )

@@ -24,6 +24,8 @@ brew install mmv
 brew install tailscale
 # 简单容器
 brew install http-server
+# 使用 neovim
+brew install nvim
 
 # Remove outdated versions from the cellar.
 brew cleanup
