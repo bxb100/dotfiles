@@ -2,8 +2,6 @@
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 export PATH=$HOME/.pyenv/shims:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/Applications/Wireshark.app/Contents/MacOS:$HOME/.local/bin
-#NIX
-export PATH=$PATH:/nix/var/nix/profiles/default/bin
 # Path to your oh-my-zsh installation.
 export ZSH=$HOME/.oh-my-zsh
 # ANTLR path
