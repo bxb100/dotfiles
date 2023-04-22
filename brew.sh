@@ -29,3 +29,12 @@ brew install nvim
 
 # Remove outdated versions from the cellar.
 brew cleanup
+
+# Dig 的替代品
+brew install doggo
+# fuck correct the wrong spelling
+brew install thefuck
+# cat 的替代品
+brew install bat
+# ls 的替代品
+brew install exa

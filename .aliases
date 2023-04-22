@@ -15,6 +15,7 @@ alias dt="cd ~/Desktop"
 alias p="cd ~/projects"
 alias g="git"
 
+command -v exa > /dev/null && alias ls="exa --icons --color-scale"
 # List all files colorized in long format
 alias l="ls -lF"
 
@@ -127,6 +128,6 @@ alias reload="exec ${SHELL} -l"
 # Print each PATH entry on a separate line
 alias path='echo -e ${PATH//:/\\n}'
 
-alias vim='nvim'
-alias VIM='nvim'
+command -v nvim > /dev/null && alias vim='nvim' && alias VIM='nvim'
 alias tldr='tldr --theme=base16'
+command -v bat > /dev/null && alias cat='bat'
