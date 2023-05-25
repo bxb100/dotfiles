@@ -129,5 +129,4 @@ alias reload="exec ${SHELL} -l"
 alias path='echo -e ${PATH//:/\\n}'
 
 command -v nvim > /dev/null && alias vim='nvim' && alias VIM='nvim'
-alias tldr='tldr --theme=base16'
 command -v bat > /dev/null && alias cat='bat'
