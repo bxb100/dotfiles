@@ -1,8 +1,43 @@
+# IDEA 编辑器标准
+# https://editorconfig.org/
+# 最顶层的 EditorConfig 文件
 root = true
 
 [*]
+# 默认文件编码
 charset = utf-8
-indent_style = tab
+# Unix 风格的换行符
 end_of_line = lf
+# 文件缩进
+indent_style = space
+# 4 空格星人
+tab_width = 4
+indent_size = 4
+max_line_length = 120
+
+[*.java]
+# 超过 100 个引用才会用 * 来全部引用
+ij_java_class_count_to_use_import_on_demand = 100
+ij_java_names_count_to_use_import_on_demand = 100
+# import 包名顺序
+ij_java_imports_layout = java.**, javax.**, |, au.com.luben.**, |, *, |, $*
+
+[.editorconfig]
+ij_editorconfig_align_group_field_declarations = false
+ij_editorconfig_space_after_colon = false
+ij_editorconfig_space_after_comma = true
+ij_editorconfig_space_before_colon = false
+ij_editorconfig_space_before_comma = false
+ij_editorconfig_spaces_around_assignment_operators = true
+
+[*.{js, html}]
+# 缩进尺寸
+indent_size = 2
+# 文件末尾新增一行
 insert_final_newline = true
+# 删除换行符之前的任何空白字符
 trim_trailing_whitespace = true
+
+[{*.yaml,*.yml}]
+indent_size = 2
+
