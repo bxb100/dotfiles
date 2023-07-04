@@ -11,9 +11,24 @@ end_of_line = lf
 # 文件缩进
 indent_style = space
 # 4 空格星人
-tab_width = 4
 indent_size = 4
-max_line_length = 120
+max_line_length = 100
+
+# https://github.com/uutils/coreutils/blob/main/.editorconfig
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[{[Mm]akefile{,.*},*.{mak,mk,[Mm][Aa][Kk],[Mm][Kk]},[Gg][Nn][Uu]makefile}]
+# makefiles ~ TAB-style indentation
+indent_style = tab
+
+[*.bash]
+# `bash` shell scripts
+indent_size = 4
+indent_style = space
+# * ref: <https://github.com/foxundermoon/vs-shell-format/blob/bc56a8e367b04bbf7d9947b767dc82516a6155b7/src/shFormat.ts>
+# shell_variant = bash ## allow `shellcheck` to decide via script hash-bang/sha-bang line
+switch_case_indent = true
 
 [*.java]
 # 超过 100 个引用才会用 * 来全部引用
@@ -40,4 +55,3 @@ trim_trailing_whitespace = true
 
 [{*.yaml,*.yml}]
 indent_size = 2
-
