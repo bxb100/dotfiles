@@ -18,7 +18,7 @@ max_line_length = 100
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[{[Mm]akefile{,.*},*.{mak,mk,[Mm][Aa][Kk],[Mm][Kk]},[Gg][Nn][Uu]makefile}]
+[{[Mm]akegile,*.{[Mm][Aa][Kk],[Mm][Kk]},[Gg][Nn][Uu]makefile}]
 # makefiles ~ TAB-style indentation
 indent_style = tab
 
@@ -28,7 +28,8 @@ indent_size = 4
 indent_style = space
 # * ref: <https://github.com/foxundermoon/vs-shell-format/blob/bc56a8e367b04bbf7d9947b767dc82516a6155b7/src/shFormat.ts>
 # shell_variant = bash ## allow `shellcheck` to decide via script hash-bang/sha-bang line
-switch_case_indent = true
+# switch_case_indent = true
+ij_shell_switch_cases_indented = true
 
 [*.java]
 # 超过 100 个引用才会用 * 来全部引用
@@ -45,7 +46,7 @@ ij_editorconfig_space_before_colon = false
 ij_editorconfig_space_before_comma = false
 ij_editorconfig_spaces_around_assignment_operators = true
 
-[*.{js, html}]
+[*.{js,html}]
 # 缩进尺寸
 indent_size = 2
 # 文件末尾新增一行
