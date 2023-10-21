@@ -37,4 +37,4 @@ brew install thefuck
 # cat 的替代品
 brew install bat
 # ls 的替代品
-brew install exa
+brew install eza
