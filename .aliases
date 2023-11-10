@@ -15,7 +15,7 @@ alias dt="cd ~/Desktop"
 alias p="cd ~/projects"
 alias g="git"
 
-command -v eza > /dev/null && alias ls="eza --icons --color-scale"
+command -v eza > /dev/null && alias ls="eza --icons --color-scale=all"
 # List all files colorized in long format
 alias l="ls -lF"
 
