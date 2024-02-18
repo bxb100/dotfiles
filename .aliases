@@ -130,3 +130,7 @@ alias path='echo -e ${PATH//:/\\n}'
 
 command -v nvim > /dev/null && alias vim='nvim' && alias VIM='nvim'
 command -v bat > /dev/null && alias cat='bat'
+
+
+# https://unix.stackexchange.com/questions/102008/how-do-i-trim-leading-and-trailing-whitespace-from-each-line-of-some-output
+alias trim="awk '{\$1=\$1};1'"
