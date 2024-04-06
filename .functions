@@ -195,3 +195,25 @@ function gitup() {
 		fi;
 	done;
 }
+
+function earse-target() {
+	for d in ${PWD}/*/; do
+		if [ -d "$d/target" ]; then
+			echo "Cleaning target $d…";
+			(
+				cd "$d" || exit;
+				/bin/rm -rf target;
+			);
+		fi;
+	done;
+}
+
+function cargo-update() {
+    # https://github.com/rust-lang/cargo/issues/9527
+    cargo install $(cargo install --list | egrep '^[a-z0-9_-]+ v[0-9.]+:$' | cut -f1 -d' ')
+}
+
+function mavenclean() {
+    # https://stackoverflow.com/questions/5074063/maven-error-failure-to-transfer
+    find ~/.m2  -name "*.lastUpdated" -exec grep -q "Could not transfer" {} \; -print -exec rm {} \;
+}
