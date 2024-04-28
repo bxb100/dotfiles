@@ -36,5 +36,11 @@ export GPG_TTY=$(tty);
 # Hide the “default interactive shell is now zsh” warning on macOS.
 export BASH_SILENCE_DEPRECATION_WARNING=1;
 
-# 关闭 FIG 的监控, 这个和 NIX 冲突
-export FIG_DISABLE_SENTRY=1
+# Rust China proxy
+export RUSTUP_DIST_SERVER="https://rsproxy.cn"
+export RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
+
+# https://twitter.com/Manjusaka_Lee/status/1769660168890204378
+# https://github.com/apache/opendal/issues/3756
+export RUSTFLAGS="-C force-frame-pointers=yes -C debuginfo=1"
+

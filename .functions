@@ -218,9 +218,6 @@ function mavenclean() {
     find ~/.m2  -name "*.lastUpdated" -exec grep -q "Could not transfer" {} \; -print -exec rm {} \;
 }
 
-if command alias md &> /dev/null; then
-  unalias md
-fi
 function md() {
 	mkdir -p "$1" && cd "$1" || exit
 }
@@ -248,7 +245,7 @@ function openg() {
 			# Construct the HTTPS URL using the converted repository name
 			https_url="https://github.com/$organization/$repository"
 
-			echo $https_url	
+			echo $https_url
 			open $https_url
 		else
 			# The URL is not a valid Git repository URL
