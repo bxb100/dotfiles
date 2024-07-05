@@ -69,6 +69,10 @@
 	# Show the user email for the current repository.
 	whoami = config user.email
 
+	undo = reset --soft ^HEAD
+	cancel = reset --hard ^HEAD
+	onemore = commit -a --amend --no-edit
+
 [apply]
 
 	# Detect whitespace errors when applying a patch.
