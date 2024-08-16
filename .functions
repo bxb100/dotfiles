@@ -223,35 +223,5 @@ function md() {
 }
 
 function openg() {
-	repo=$(git config remote.origin.url)
-
-	if [[ $repo =~ ^git@github.com:(.+)/(.+)\.git$ ]]; then
-		# Extract the organization and repository name from the SSH URL
-		organization=${match[1]}
-		repository=${match[2]}
-
-		# Convert the SSH URL to HTTPS format
-		https_url="https://github.com/$organization/$repository"
-
-		echo $https_url
-		open $https_url
-	else
-		# Check if the first argument is an HTTPS URL
-		if [[ $repo =~ ^https://github.com/(.+)/(.+)\.git$ ]]; then
-			# Extract the organization and repository name from the HTTPS URL
-			organization=${match[1]}
-			repository=${match[2]}
-
-			# Construct the HTTPS URL using the converted repository name
-			https_url="https://github.com/$organization/$repository"
-
-			echo $https_url
-			open $https_url
-		else
-			# The URL is not a valid Git repository URL
-			echo "Invalid Git repository URL"
-			return 1
-		fi
-	fi
-
+    gh repo view --web
 }
