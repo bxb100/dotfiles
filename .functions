@@ -229,7 +229,11 @@ function md() {
 }
 
 function openg() {
-	gh repo view --web
+	local repo
+	if [[ -d '.jj' ]]; then
+		repo=$(jj git remote list | awk 'NR==1 {print $2}')
+	fi
+	gh repo view "$repo" -w
 }
 
 function gradleclean() {
