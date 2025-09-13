@@ -65,7 +65,7 @@ function diff() {
 	else
 		echo "ERROR: git is not installed. Please install git to use this function."
 		return 1
-	fi	
+	fi
 }
 
 # Create a data URL from a file
@@ -191,14 +191,16 @@ function checksum() {
 
 # Update all git repositories under the current path
 function gitup() {
-	for d in "${PWD}"/*/; do
-		if [ -d "$d/.git" ]; then
-			echo "Updating $d…"
-			(
-				cd "$d" || exit
-				git pull --prune
-			)
+	function up() {
+		if [ -d "$1/.git" ]; then
+			echo "Updating $1…"
+			cd "$1" || exit
+			git pull --prune
 		fi
+	}
+	up "$PWD"
+	for d in "${PWD}"/*/; do
+		up "$d"
 	done
 }
 
@@ -214,10 +216,10 @@ function earse-target() {
 	done
 }
 
-function cargo-update() {
+# function cargo-update() {
 	# https://github.com/rust-lang/cargo/issues/9527
-	cargo install "$(cargo install --list | grep -E '^[a-z0-9_-]+ v[0-9.]+:$' | cut -f1 -d' ')"
-}
+# 	cargo install "$(cargo install --list | grep -E '^[a-z0-9_-]+ v[0-9.]+:$' | cut -f1 -d' ')"
+# }
 
 function mavenclean() {
 	# https://stackoverflow.com/questions/5074063/maven-error-failure-to-transfer
