@@ -134,18 +134,11 @@ command -v nvim > /dev/null && alias vim='nvim' && alias VIM='nvim'
 
 command -v bat > /dev/null && alias cat='preview'
 # https://github.com/nilaoda/N_m3u8DL-RE
-# alias m3u8dl='m3u8dl --no-log'
-
-#  https://github.com/orgs/community/discussions/86354
-alias '??'='gh copilot suggest -t shell'
-alias 'git?'='gh copilot suggest -t git'
-alias 'explain'='gh copilot explain'
+alias m3u8dl='m3u8dl --no-log'
 
 # https://unix.stackexchange.com/questions/102008/how-do-i-trim-leading-and-trailing-whitespace-from-each-line-of-some-output
 alias trim="awk '{\$1=\$1};1'"
 
-# fix warp ssh wrapper issue https://docs.warp.dev/features/ssh#implementation
-alias cssh="command ssh"
-
+# Compress an image file to a WebP file.
 alias webp=cwebp
 
