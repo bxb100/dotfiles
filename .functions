@@ -102,38 +102,57 @@ function digga() {
 	dig +nocmd "$1" any +multiline +noall +answer
 }
 
-# Show all the names (CNs and SANs) listed in the SSL certificate
-# for a given domain
+# A function to retrieve Common Name (CN) and Subject Alternative Names (SANs)
+# from a domain's SSL certificate.
 function getcertnames() {
-	if [ -z "${1}" ]; then
-		echo "ERROR: No domain specified."
-		return 1
-	fi
+  # 1. Validate input
+  if [ -z "${1}" ]; then
+    echo "ERROR: No domain specified." >&2
+    echo "Usage: getcertnames <domain>" >&2
+    return 1
+  fi
 
-	local domain="${1}"
-	echo "Testing ${domain}…"
-	echo "" # newline
+  local domain="${1}"
+  echo "Testing ${domain}…"
 
-	tmp=$(echo -e "GET / HTTP/1.0\nEOT" |
-		openssl s_client -connect "${domain}:443" -servername "${domain}" 2>&1)
+  # 2. Retrieve certificate text in one pipeline, more efficiently.
+  #    - Use <<<"" to close s_client connection cleanly without sending HTTP requests.
+  #    - Pipe directly to x509 to avoid intermediate variables.
+  #    - Use -noout with -text to only output the text version.
+  #    - Redirect s_client stderr to /dev/null to hide connection info.
+  local cert_text
+  cert_text=$(openssl s_client -connect "${domain}:443" -servername "${domain}" <<<"" 2>/dev/null |
+              openssl x509 -noout -text)
 
-	if [[ "${tmp}" = *"-----BEGIN CERTIFICATE-----"* ]]; then
-		certText=$(echo "${tmp}" |
-			openssl x509 -text -certopt "no_aux, no_header, no_issuer, no_pubkey, \
-			no_serial, no_sigdump, no_signame, no_validity, no_version")
-		echo "Common Name:"
-		echo "" # newline
-		echo "${certText}" | grep "Subject:" | sed -e "s/^.*CN=//" | sed -e "s/\/emailAddress=.*//"
-		echo "" # newline
-		echo "Subject Alternative Name(s):"
-		echo "" # newline
-		echo "${certText}" | grep -A 1 "Subject Alternative Name:" |
-			sed -e "2s/DNS://g" -e "s/ //g" | tr "," "\n" | tail -n +2
-		return 0
-	else
-		echo "ERROR: Certificate not found."
-		return 1
-	fi
+  # 3. Check if the certificate text was successfully retrieved
+  if [ -z "${cert_text}" ]; then
+    echo "ERROR: Failed to retrieve or parse certificate from ${domain}." >&2
+    return 1
+  fi
+
+  # 4. Use awk for more robust and efficient parsing
+  echo "${cert_text}" | awk '
+    /Subject:.*CN/ {
+      # Extract the Common Name (CN)
+
+      if (match($0, /CN=([^\/]+)/)) {
+        print "\nCommon Name:";
+        print substr($0, RSTART + 3, RLENGTH);
+      }
+    }
+    /Subject Alternative Name/ {
+      # The SANs are on the next line, so we use getline
+      getline;
+      # Remove all whitespace and "DNS:" prefixes
+      gsub(/DNS:| /, "");
+      # Replace commas with newlines
+      gsub(/,/, "\n");
+      print "\nSubject Alternative Name(s):";
+      print;
+    }
+  '
+
+  return 0
 }
 
 # Normalize `open` across Linux, macOS, and Windows.
@@ -242,4 +261,33 @@ function gradleclean() {
 	# https://github.com/gradle/gradle/issues/2304
 	find ~/.gradle/caches -type f -atime +30 -delete -print
 	find ~/.gradle/caches -type d -mindepth 1 -empty -delete -print
+}
+
+preview() {
+  # 1. Check if a file path was provided as an argument
+  if [ -z "$1" ]; then
+    echo "Usage: preview <file>"
+    return 1
+  fi
+
+  # 2. Check if the file actually exists
+  if [ ! -f "$1" ]; then
+    echo "File not found: $1"
+    return 1
+  fi
+
+  # 3. Check if the file has a .md extension
+  if [[ "$1" == *.md ]]; then
+    # 4. Check if the 'glow' command is available
+    if command -v glow &> /dev/null; then
+      glow -p "$1"
+    else
+      # Fallback if glow is not installed
+      echo "'glow' not found, falling back to 'bat'."
+      bat "$1"
+    fi
+  else
+    # 5. Use 'bat' for any other file type
+    bat "$1"
+  fi
 }
