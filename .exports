@@ -60,6 +60,11 @@ export JAVA_HOME=${SDKMAN_DIR}/candidates/java/current
 # binding python
 export PYO3_PYTHON=/opt/homebrew/opt/python@3.13/bin/python3.13
 
-# https://mirrors.tuna.tsinghua.edu.cn/help/rustup/
-export RUSTUP_UPDATE_ROOT=https://mirrors.tuna.tsinghua.edu.cn/rustup/rustup
-export RUSTUP_DIST_SERVER=https://mirrors.tuna.tsinghua.edu.cn/rustup
+# Rust toolchain mirror
+export RUSTUP_DIST_SERVER="https://rsproxy.cn"
+export RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
+
+# https://developer.1password.com/docs/ssh/get-started#step-4-configure-your-ssh-or-git-client
+export SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
+
+export DIRENV_WARN_TIMEOUT='13s'

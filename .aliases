@@ -38,7 +38,7 @@ alias week='date +%V'
 
 # Get macOS Software Updates, and update installed Ruby gems, Homebrew, npm, and their installed packages
 # alias update='sudo softwareupdate -i -a; brew update; brew upgrade; brew cleanup; npm install npm -g; npm update -g;cargo install-update -a;'
-alias update='brew update; brew upgrade; brew cleanup; tldr -u;'
+alias update='brew update; brew upgrade; brew cleanup; npm update -g; tldr -u'
 
 # Google Chrome
 alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
@@ -134,7 +134,7 @@ command -v nvim > /dev/null && alias vim='nvim' && alias VIM='nvim'
 
 command -v bat > /dev/null && alias cat='preview'
 # https://github.com/nilaoda/N_m3u8DL-RE
-alias m3u8dl='m3u8dl --no-log'
+alias m3u8dl='N_m3u8DL-RE --no-log'
 
 # https://unix.stackexchange.com/questions/102008/how-do-i-trim-leading-and-trailing-whitespace-from-each-line-of-some-output
 alias trim="awk '{\$1=\$1};1'"
@@ -142,3 +142,8 @@ alias trim="awk '{\$1=\$1};1'"
 # Compress an image file to a WebP file.
 alias webp=cwebp
 
+alias python3="$(brew --prefix python@3.13)/bin/python3.13"
+
+
+alias encrypt='gpg --yes --batch --pinentry-mode loopback --passphrase=$(op read "op://dev/GPG symmetric password/password") --symmetric --cipher-algo AES256'
+alias decrypt='gpg --quiet --batch --passphrase=$(op read "op://dev/GPG symmetric password/password") -d'
