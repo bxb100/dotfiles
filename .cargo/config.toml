@@ -15,4 +15,3 @@ git-fetch-with-cli = true
 # https://twitter.com/Manjusaka_Lee/status/1769660168890204378
 # https://github.com/apache/opendal/issues/3756
 # rustflags = ["-C", "force-frame-pointers=yes", "-C", "debuginfo=1"]
-
