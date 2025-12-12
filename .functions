@@ -271,7 +271,7 @@ preview() {
   fi
 
   # 2. Check if the file actually exists
-  if [ ! -f "$1" ]; then
+  if [ ! -e "$1" ]; then
     echo "File not found: $1"
     return 1
   fi
