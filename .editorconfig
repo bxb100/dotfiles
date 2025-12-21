@@ -10,13 +10,21 @@ charset = utf-8
 end_of_line = lf
 # 文件缩进
 indent_style = space
-# 4 空格星人
-indent_size = 4
-max_line_length = 100
-
-# https://github.com/uutils/coreutils/blob/main/.editorconfig
+indent_size = 2
+tab_width = 2
+max_line_length = 120
 insert_final_newline = true
 trim_trailing_whitespace = true
+
+ij_continuation_indent_size = 4
+ij_formatter_off_tag = @formatter:off
+ij_formatter_on_tag = @formatter:on
+ij_formatter_tags_enabled = false
+ij_smart_tabs = false
+ij_wrap_on_typing = false
+
+ij_any_blank_lines_after_imports = 2
+ij_markdown_wrap_text_if_long = false
 
 [{[Mm]akegile,*.{[Mm][Aa][Kk],[Mm][Kk]},[Gg][Nn][Uu]makefile}]
 # makefiles ~ TAB-style indentation
@@ -31,12 +39,14 @@ indent_style = space
 # switch_case_indent = true
 ij_shell_switch_cases_indented = true
 
-[*.java]
+[*.{java, kt}]
 # 超过 100 个引用才会用 * 来全部引用
 ij_java_class_count_to_use_import_on_demand = 100
 ij_java_names_count_to_use_import_on_demand = 100
 # import 包名顺序
 ij_java_imports_layout = java.**, javax.**, |, au.com.luben.**, |, *, |, $*
+indent_size = 4
+ij_continuation_indent_size = 8
 
 [.editorconfig]
 ij_editorconfig_align_group_field_declarations = false
@@ -46,13 +56,34 @@ ij_editorconfig_space_before_colon = false
 ij_editorconfig_space_before_comma = false
 ij_editorconfig_spaces_around_assignment_operators = true
 
-[*.{js,html}]
+[*.{js,ts,html,tsx,vue,astro}]
+indent_style = space
 # 缩进尺寸
 indent_size = 2
 # 文件末尾新增一行
 insert_final_newline = true
 # 删除换行符之前的任何空白字符
 trim_trailing_whitespace = true
+ij_typescript_use_double_quotes = false
+ij_typescript_spaces_within_imports = true
 
 [{*.yaml,*.yml}]
 indent_size = 2
+
+[*.{bat,cmd,[Bb][Aa][Tt],[Cc][Mm][Dd]}]
+# BAT/CMD ~ DOS/Win requires BAT/CMD files to have CRLF EOLNs
+end_of_line = crlf
+
+[justfile]
+indent_size = 2
+
+[*.json]
+indent_size = 2
+
+[*.{md,mkd,markdown}]
+indent_size = 4
+ij_continuation_indent_size = 8
+trim_trailing_whitespace = false
+
+[*.xml]
+indent_style = tab
