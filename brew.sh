@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 
-# Install command-line tools using Homebrew.
-
-# Make sure we’re using the latest Homebrew.
+brew cleanup --prune=all
 brew update
-
-# Upgrade any already-installed formulae.
 brew upgrade
 
 # 工具集
-brew install tldr
+# https://github.com/tldr-pages/tlrc
+brew install tlrc
 brew install ffmpeg
 # 别名 rg
 brew install ripgrep
@@ -27,14 +24,15 @@ brew install http-server
 # 使用 neovim
 brew install nvim
 
-# Remove outdated versions from the cellar.
-brew cleanup
-
-# Dig 的替代品
-brew install doggo
-# fuck correct the wrong spelling
-brew install thefuck
+# Deep clean
+# https://github.com/tw93/mole
+brew install tw93/tap/mole
 # cat 的替代品
 brew install bat
 # ls 的替代品
 brew install eza
+# fixit, thefuck 的替代
+# https://github.com/eugene-babichenko/fixit/
+brew install eugene-babichenko/fixit/fixit
+# https://yazi-rs.github.io/docs/installation#homebrew
+brew install yazi

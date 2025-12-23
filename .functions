@@ -217,10 +217,12 @@ function gitup() {
 			git pull --prune
 		fi
 	}
+  local cwd="$PWD"
 	up "$PWD"
 	for d in "${PWD}"/*/; do
 		up "$d"
 	done
+	builtin cd -- "$cwd"
 }
 
 function earse-target() {
@@ -290,4 +292,13 @@ preview() {
     # 5. Use 'bat' for any other file type
     bat "$1"
   fi
+}
+
+# https://yazi-rs.github.io/docs/quick-start
+function y() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+	yazi "$@" --cwd-file="$tmp"
+	IFS= read -r -d '' cwd < "$tmp"
+	[ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
+	rm -f -- "$tmp"
 }
