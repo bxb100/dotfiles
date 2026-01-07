@@ -31,9 +31,6 @@ brew install tw93/tap/mole
 brew install bat
 # ls 的替代品
 brew install eza
-# fixit, thefuck 的替代
-# https://github.com/eugene-babichenko/fixit/
-brew install eugene-babichenko/fixit/fixit
 # https://yazi-rs.github.io/docs/installation#homebrew
 brew install yazi
 # https://github.com/pranshuparmar/witr#81-homebrew-macos--linux
