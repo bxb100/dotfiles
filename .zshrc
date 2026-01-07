@@ -82,7 +82,9 @@ source $ZSH/oh-my-zsh.sh
 # * ~/.extra can be used for other settings you don’t want to commit.
 # zsh have a default md
 unalias md
-for file in ~/.{path,exports,aliases,functions,extra}; do
+unalias ga
+unalias gd
+for file in ~/.{path,exports,aliases,functions,extra,git_worktree}; do
 	[ -r "$file" ] && [ -f "$file" ] && source "$file";
 done;
 unset file;
