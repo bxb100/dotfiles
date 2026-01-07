@@ -36,3 +36,5 @@ brew install eza
 brew install eugene-babichenko/fixit/fixit
 # https://yazi-rs.github.io/docs/installation#homebrew
 brew install yazi
+# https://github.com/pranshuparmar/witr#81-homebrew-macos--linux
+brew install witr
