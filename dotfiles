@@ -43,7 +43,7 @@ export BASH_SILENCE_DEPRECATION_WARNING=1;
 # https://github.com/zed-industries/zed/discussions/7561
 # export CPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include
 # make sure using `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
-# export CPATH="$(xcrun --show-sdk-path)/usr/include"
+export CPATH="$(xcrun --show-sdk-path)/usr/include"
 
 # https://docs.flutter.dev/community/china
 export PUB_HOSTED_URL=https://pub.flutter-io.cn;
@@ -53,6 +53,11 @@ export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn
 # export LDFLAGS="-L/opt/homebrew/opt/llvm/lib"
 # export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
 # export CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm"
+
+# binding python
+export PYO3_PYTHON=/opt/homebrew/opt/python@3.13/bin/python3.13
+# https://stackoverflow.com/questions/78703690/pipx-using-the-latest-python-3-12-instead-of-the-system-default
+export PIPX_DEFAULT_PYTHON=/opt/homebrew/bin/python3.13
 
 # Rust toolchain mirror
 export RUSTUP_DIST_SERVER="https://rsproxy.cn"
@@ -66,12 +71,13 @@ export DIRENV_WARN_TIMEOUT='13s'
 # https://yazi-rs.github.io/docs/faq/#why-cant-edit
 export EDITOR=nvim
 
+
 # sccache
 # https://github.com/mozilla/sccache/blob/main/docs/S3.md
 # https://data.cstcloud.cn/my
 export SCCACHE_BUCKET=
 export SCCACHE_REGION=us-east-1
-export SCCACHE_ENDPOINT=
+export SCCACHE_ENDPOINT=https://s3.cstcloud.cn
 export SCCACHE_S3_USE_SSL=true
 export AWS_ACCESS_KEY_ID=
 export AWS_SECRET_ACCESS_KEY=
