@@ -583,34 +583,16 @@ md() {
 
 # Open the current GitHub repository, including jj-backed repositories.
 openg() {
-  local repository remote_output
+  local repository remote_output current_branch default_branch
 
   _require_command gh || return
-  if command -v jj >/dev/null 2>&1 &&
-    command jj root >/dev/null 2>&1; then
-    remote_output=$(command jj git remote list) || return
-    repository=$(
-      printf '%s\n' "$remote_output" |
-        command awk '
-          $1 == "origin" {
-            print $2
-            found = 1
-            exit
-          }
-          NR == 1 { fallback = $2 }
-          END {
-            if (!found && fallback != "") {
-              print fallback
-            }
-          }
-        '
-    ) || return
-
-    if [[ -z "$repository" ]]; then
-      printf 'ERROR: No jj Git remote was found.\n' >&2
-      return 1
-    fi
-    command gh repo view "$repository" --web
+  _require_command git || return
+  current_branch=$(command git branch --show-current) || return
+  default_branch=$(command git config --get init.defaultBranch 2>/dev/null) ||
+    default_branch=""
+  if [[ -n "$current_branch" && -n "$default_branch" &&
+    "$current_branch" != "$default_branch" ]]; then
+    command gh pr view --web
     return
   fi
 
