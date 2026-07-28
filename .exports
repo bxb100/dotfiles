@@ -68,14 +68,19 @@ export EDITOR=nvim
 
 # sccache
 # https://github.com/mozilla/sccache/blob/main/docs/S3.md
-# https://data.cstcloud.cn/my
-export SCCACHE_BUCKET=
-export SCCACHE_REGION=us-east-1
-export SCCACHE_ENDPOINT=
-export SCCACHE_S3_USE_SSL=true
-export AWS_ACCESS_KEY_ID=
-export AWS_SECRET_ACCESS_KEY=
-export SCCACHE_S3_KEY_PREFIX=rust
+# https://data.cstcloud.cn/my/client/1e9ba710e256409d9fa5380d16120e2a
+# export SCCACHE_BUCKET=[READACTED]
+# export SCCACHE_REGION=us-east-1
+# export SCCACHE_ENDPOINT=[READACTED]
+# export SCCACHE_S3_USE_SSL=true
+# export AWS_ACCESS_KEY_ID=[READACTED]
+# export AWS_SECRET_ACCESS_KEY=[READACTED]
+# export SCCACHE_S3_KEY_PREFIX=rust
+
+# kcache
+# https://kunobi.ninja/docs/kache/remote-cache/s3-setup
+export KACHE_S3_ACCESS_KEY=[READACTED]
+export KACHE_S3_SECRET_KEY=[READACTED]
 
 # mise
 export MISE_INSTALL=~/.local/share/mise/installs

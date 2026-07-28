@@ -1,309 +1,664 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
-# Create a new directory and enter it
-function mkd() {
-	mkdir -p "$@" && cd "$_" || exit
+# This file is sourced by zsh. Keep helpers private by prefixing them with "_".
+
+unalias open 2>/dev/null
+unfunction diff 2>/dev/null
+
+_require_command() {
+  local required_command="$1"
+
+  if ! command -v "$required_command" >/dev/null 2>&1; then
+    printf 'ERROR: Required command not found: %s\n' "$required_command" >&2
+    return 127
+  fi
 }
 
-# Change working directory to the top-most Finder window location
-function cdf() { # short for `cdfinder`
-	cd "$(osascript -e 'tell app "Finder" to POSIX path of (insertion location as alias)')" || exit
+_open() {
+  local target
+
+  if [[ "$OSTYPE" == darwin* ]]; then
+    _require_command open || return
+    command open "$@"
+    return
+  fi
+
+  if [[ -r /proc/version ]] && command grep -qi microsoft /proc/version; then
+    _require_command explorer.exe || return
+    for target in "$@"; do
+      command explorer.exe "$target" || return
+    done
+    return
+  fi
+
+  _require_command xdg-open || return
+  for target in "$@"; do
+    command xdg-open "$target" || return
+  done
 }
 
-# Create a .tar.gz archive, using `zopfli`, `pigz` or `gzip` for compression
-function targz() {
-	local tmpFile
-	tmpFile="${@%/}.tar"
-	tar -cvf "${tmpFile}" --exclude=".DS_Store" "${@}" || return 1
+# Create a directory and enter it.
+mkd() {
+  if (( $# != 1 )); then
+    printf 'Usage: mkd <directory>\n' >&2
+    return 2
+  fi
 
-	size=$(
-		stat -f"%z" "${tmpFile}" 2>/dev/null # macOS `stat`
-		stat -c"%s" "${tmpFile}" 2>/dev/null # GNU `stat`
-	)
-
-	if ((size < 52428800)) && hash zopfli 2>/dev/null; then
-		# the .tar file is smaller than 50 MB and Zopfli is available; use it
-		cmd="zopfli"
-	else
-		if hash pigz 2>/dev/null; then
-			cmd="pigz"
-		else
-			cmd="gzip"
-		fi
-	fi
-
-	echo "Compressing .tar ($((size / 1000)) kB) using \`${cmd}\`…"
-	"${cmd}" -v "${tmpFile}" || return 1
-	[ -f "${tmpFile}" ] && rm "${tmpFile}"
-
-	zippedSize=$(
-		stat -f"%z" "${tmpFile}.gz" 2>/dev/null # macOS `stat`
-		stat -c"%s" "${tmpFile}.gz" 2>/dev/null # GNU `stat`
-	)
-
-	echo "${tmpFile}.gz ($((zippedSize / 1000)) kB) created successfully."
+  command mkdir -p -- "$1" || return
+  builtin cd -- "$1"
 }
 
-# Determine size of a file or total size of a directory
-function fs() {
-	if du -b /dev/null >/dev/null 2>&1; then
-		local arg=-sbh
-	else
-		local arg=-sh
-	fi
-	if [[ -n "$*" ]]; then
-		du $arg -- "$@"
-	else
-		du $arg .[^.]* ./*
-	fi
-}
+# Change to the location of the frontmost Finder window.
+cdf() {
+  local directory
 
-# Use Git’s colored diff when available
-function diff() {
-	if command -v git >/dev/null; then
-		git diff --no-index --color-words "$@"
-	else
-		echo "ERROR: git is not installed. Please install git to use this function."
-		return 1
-	fi
-}
+  _require_command osascript || return
+  directory=$(
+    command osascript -e \
+      'tell app "Finder" to POSIX path of (insertion location as alias)'
+  ) || return
 
-# Create a data URL from a file
-function dataurl() {
-	local mimeType
-	mimeType=$(file -b --mime-type "$1")
-	if [[ $mimeType == text/* ]]; then
-		mimeType="${mimeType};charset=utf-8"
-	fi
-	echo "data:${mimeType};base64,$(openssl base64 -in "$1" | tr -d '\n')"
-}
-
-# Start an HTTP server from a directory, optionally specifying the port
-function server() {
-	local port="${1:-8000}"
-	sleep 1 && open "http://localhost:${port}/" &
-	# Set the default Content-Type to `text/plain` instead of `application/octet-stream`
-	# And serve everything as UTF-8 (although not technically correct, this doesn’t break anything for binary files)
-	http-server --port "${port}"
-	# python -c $'import SimpleHTTPServer;\nmap = SimpleHTTPServer.SimpleHTTPRequestHandler.extensions_map;\nmap[""] = "text/plain";\nfor key, value in map.items():\n\tmap[key] = value + ";charset=UTF-8";\nSimpleHTTPServer.test();' "$port";
-}
-
-# Compare original and gzipped file size
-function gz() {
-	origsize=$(wc -c <"$1")
-	gzipsize=$(gzip -c "$1" | wc -c)
-	ratio=$(echo "$gzipsize * 100 / $origsize" | bc -l)
-	printf "orig: %d bytes\n" "$origsize"
-	printf "gzip: %d bytes (%2.2f%%)\n" "$gzipsize" "$ratio"
-}
-
-# Run `dig` and display the most useful info
-function digga() {
-	dig +nocmd "$1" any +multiline +noall +answer
-}
-
-# A function to retrieve Common Name (CN) and Subject Alternative Names (SANs)
-# from a domain's SSL certificate.
-function getcertnames() {
-  # 1. Validate input
-  if [ -z "${1}" ]; then
-    echo "ERROR: No domain specified." >&2
-    echo "Usage: getcertnames <domain>" >&2
+  if [[ -z "$directory" || ! -d "$directory" ]]; then
+    printf 'ERROR: Finder did not return a valid directory.\n' >&2
     return 1
   fi
 
-  local domain="${1}"
-  echo "Testing ${domain}…"
+  builtin cd -- "$directory"
+}
 
-  # 2. Retrieve certificate text in one pipeline, more efficiently.
-  #    - Use <<<"" to close s_client connection cleanly without sending HTTP requests.
-  #    - Pipe directly to x509 to avoid intermediate variables.
-  #    - Use -noout with -text to only output the text version.
-  #    - Redirect s_client stderr to /dev/null to hide connection info.
-  local cert_text
-  cert_text=$(openssl s_client -connect "${domain}:443" -servername "${domain}" <<<"" 2>/dev/null |
-              openssl x509 -noout -text)
+# Create a gzip-compressed tar archive from one file or directory.
+targz() {
+  local source_path source_parent source_name archive_path temporary_archive
 
-  # 3. Check if the certificate text was successfully retrieved
-  if [ -z "${cert_text}" ]; then
-    echo "ERROR: Failed to retrieve or parse certificate from ${domain}." >&2
+  if (( $# < 1 || $# > 2 )); then
+    printf 'Usage: targz <source> [archive.tar.gz]\n' >&2
+    return 2
+  fi
+
+  source_path="$1"
+  if [[ ! -e "$source_path" ]]; then
+    printf 'ERROR: Source does not exist: %s\n' "$source_path" >&2
     return 1
   fi
 
-  # 4. Use awk for more robust and efficient parsing
-  echo "${cert_text}" | awk '
-    /Subject:.*CN/ {
-      # Extract the Common Name (CN)
+  source_path="${source_path:a}"
+  if [[ "$source_path" == / ]]; then
+    printf 'ERROR: Refusing to archive the filesystem root.\n' >&2
+    return 1
+  fi
+  source_parent="${source_path:h}"
+  source_name="${source_path:t}"
+  archive_path="${2:-${source_name}.tar.gz}"
+  if [[ -e "$archive_path" ]]; then
+    printf 'ERROR: Archive already exists: %s\n' "$archive_path" >&2
+    return 1
+  fi
 
-      if (match($0, /CN=([^\/]+)/)) {
-        print "\nCommon Name:";
-        print substr($0, RSTART + 3, RLENGTH);
+  temporary_archive=$(command mktemp -t targz.XXXXXX) || return
+  (
+    trap 'command rm -f -- "$temporary_archive"' EXIT HUP INT TERM
+
+    command tar -C "$source_parent" -czf "$temporary_archive" \
+      --exclude='.DS_Store' \
+      -- "$source_name" || exit
+    command mv -- "$temporary_archive" "$archive_path" || exit
+    trap - EXIT HUP INT TERM
+  ) || return
+
+  printf '%s created successfully.\n' "$archive_path"
+}
+
+# Show disk usage for the requested paths or every item in the current directory.
+fs() {
+  local -a targets
+
+  if (( $# )); then
+    targets=("$@")
+  else
+    targets=(./*(DN))
+    (( ${#targets} )) || targets=(.)
+  fi
+
+  command du -sh -- "${targets[@]}"
+}
+
+# Compare two paths using Git's word-colored diff.
+gdiff() {
+  if (( $# != 2 )); then
+    printf 'Usage: gdiff <path-a> <path-b>\n' >&2
+    return 2
+  fi
+
+  _require_command git || return
+  command git diff --no-index --color-words -- "$1" "$2"
+}
+
+# Create a data URL from a file.
+dataurl() {
+  local mime_type
+
+  if (( $# != 1 )); then
+    printf 'Usage: dataurl <file>\n' >&2
+    return 2
+  fi
+  if [[ ! -f "$1" || ! -r "$1" ]]; then
+    printf 'ERROR: File is not readable: %s\n' "$1" >&2
+    return 1
+  fi
+
+  _require_command file || return
+  _require_command openssl || return
+  mime_type=$(command file -b --mime-type -- "$1") || return
+  if [[ "$mime_type" == text/* ]]; then
+    mime_type="${mime_type};charset=utf-8"
+  fi
+
+  printf 'data:%s;base64,' "$mime_type"
+  command openssl base64 -A -in "$1" || {
+    printf '\n'
+    return 1
+  }
+  printf '\n'
+}
+
+# Serve a directory locally or through a temporary Cloudflare Tunnel.
+server() {
+  local directory="." port="8000"
+  local remote=0 open_browser=0
+  local -a positional
+
+  while (( $# )); do
+    case "$1" in
+      --remote)
+        remote=1
+        ;;
+      --open)
+        open_browser=1
+        ;;
+      --)
+        shift
+        positional+=("$@")
+        break
+        ;;
+      -*)
+        printf 'ERROR: Unknown option: %s\n' "$1" >&2
+        return 2
+        ;;
+      *)
+        positional+=("$1")
+        ;;
+    esac
+    shift
+  done
+  set -- "${positional[@]}"
+
+  if (( $# > 2 )); then
+    printf 'Usage: server [--remote] [--open] [directory] [port]\n' >&2
+    return 2
+  fi
+
+  if (( $# == 1 )) && [[ "$1" == <-> ]]; then
+    port="$1"
+  else
+    directory="${1:-.}"
+    port="${2:-8000}"
+  fi
+
+  if [[ ! -d "$directory" ]]; then
+    printf 'ERROR: Directory does not exist: %s\n' "$directory" >&2
+    return 1
+  fi
+  if [[ "$port" != <-> ]] || (( port < 1 || port > 65535 )); then
+    printf 'ERROR: Invalid port: %s\n' "$port" >&2
+    return 2
+  fi
+
+  _require_command http-server || return
+  if (( remote )); then
+    _require_command cloudflared || return
+
+    (
+      local http_server_pid tunnel_status
+      local tunnel_log="" watcher_pid=""
+
+      setopt local_options no_bg_nice
+      command http-server \
+        --host 127.0.0.1 \
+        --port "$port" \
+        "$directory" &
+      http_server_pid=$!
+
+      trap '
+        if [[ -n "$watcher_pid" ]]; then
+          command kill "$watcher_pid" 2>/dev/null
+          wait "$watcher_pid" 2>/dev/null
+        fi
+        command kill "$http_server_pid" 2>/dev/null
+        wait "$http_server_pid" 2>/dev/null
+        if [[ -n "$tunnel_log" ]]; then
+          command rm -f -- "$tunnel_log"
+        fi
+      ' EXIT
+      trap 'exit 130' HUP INT TERM
+
+      sleep 1
+      if ! command kill -0 "$http_server_pid" 2>/dev/null; then
+        wait "$http_server_pid"
+        return 1
+      fi
+
+      printf 'Starting a temporary Cloudflare Tunnel...\n'
+      if (( open_browser )); then
+        tunnel_log=$(command mktemp -t cloudflared.XXXXXX) || return
+        (
+          local attempt remote_url
+
+          for attempt in {1..120}; do
+            remote_url=$(
+              command grep -Eo \
+                'https://[[:alnum:]-]+\.trycloudflare\.com' \
+                "$tunnel_log" 2>/dev/null |
+                command head -n 1
+            )
+            if [[ -n "$remote_url" ]]; then
+              if ! _open "$remote_url" >/dev/null 2>&1; then
+                printf 'WARNING: Failed to open the remote URL.\n' >&2
+              fi
+              exit
+            fi
+            sleep 0.25
+          done
+
+          printf 'WARNING: Timed out waiting for the remote URL.\n' >&2
+        ) &
+        watcher_pid=$!
+
+        command cloudflared tunnel \
+          --url "http://localhost:${port}" \
+          --logfile "$tunnel_log"
+        tunnel_status=$?
+      else
+        command cloudflared tunnel \
+          --url "http://localhost:${port}"
+        tunnel_status=$?
+      fi
+      return "$tunnel_status"
+    )
+    return
+  fi
+
+  if (( open_browser )); then
+    (sleep 1 && _open "http://localhost:${port}/" >/dev/null 2>&1) &!
+  fi
+  command http-server \
+    --host 127.0.0.1 \
+    --port "$port" \
+    "$directory"
+}
+
+# Compare original and gzip-compressed file sizes.
+gz() {
+  local original_size compressed_size ratio
+
+  if (( $# != 1 )); then
+    printf 'Usage: gz <file>\n' >&2
+    return 2
+  fi
+  if [[ ! -f "$1" || ! -r "$1" ]]; then
+    printf 'ERROR: File is not readable: %s\n' "$1" >&2
+    return 1
+  fi
+
+  _require_command gzip || return
+  setopt local_options pipe_fail
+  original_size=$(command wc -c <"$1") || return
+  compressed_size=$(command gzip -cn -- "$1" | command wc -c) || return
+
+  printf 'orig: %d bytes\n' "$original_size"
+  if (( original_size == 0 )); then
+    printf 'gzip: %d bytes (ratio unavailable for an empty file)\n' \
+      "$compressed_size"
+    return
+  fi
+
+  ratio=$(command awk \
+    -v compressed="$compressed_size" \
+    -v original="$original_size" \
+    'BEGIN { printf "%.2f", compressed * 100 / original }'
+  ) || return
+  printf 'gzip: %d bytes (%s%% of original)\n' "$compressed_size" "$ratio"
+}
+
+# Display DNS answers for a domain and optional record type.
+digga() {
+  local record_type
+
+  if (( $# < 1 || $# > 2 )); then
+    printf 'Usage: digga <domain> [record-type]\n' >&2
+    return 2
+  fi
+  if [[ "$1" == -* ]]; then
+    printf 'ERROR: Invalid domain: %s\n' "$1" >&2
+    return 2
+  fi
+
+  record_type="${2:-ANY}"
+  _require_command dig || return
+  command dig +nocmd "$1" "$record_type" +multiline +noall +answer
+}
+
+# Retrieve the Common Name and Subject Alternative Names from a TLS certificate.
+getcertnames() {
+  local domain port certificate subject common_name san_output
+
+  if (( $# < 1 || $# > 2 )); then
+    printf 'Usage: getcertnames <domain> [port]\n' >&2
+    return 2
+  fi
+
+  domain="$1"
+  port="${2:-443}"
+  if [[ -z "$domain" || "$domain" == -* ]]; then
+    printf 'ERROR: Invalid domain: %s\n' "$domain" >&2
+    return 2
+  fi
+  if [[ "$port" != <-> ]] || (( port < 1 || port > 65535 )); then
+    printf 'ERROR: Invalid port: %s\n' "$port" >&2
+    return 2
+  fi
+
+  _require_command openssl || return
+  setopt local_options pipe_fail
+  certificate=$(
+    command openssl s_client \
+      -connect "${domain}:${port}" \
+      -servername "$domain" \
+      </dev/null 2>/dev/null |
+      command openssl x509 -outform PEM 2>/dev/null
+  ) || {
+    printf 'ERROR: Failed to retrieve a certificate from %s:%s.\n' \
+      "$domain" "$port" >&2
+    return 1
+  }
+
+  subject=$(
+    printf '%s\n' "$certificate" |
+      command openssl x509 \
+        -noout \
+        -subject \
+        -nameopt sep_multiline,utf8
+  ) || return
+  common_name=$(
+    printf '%s\n' "$subject" |
+      command awk '
+        /^[[:space:]]*CN=/ {
+          sub(/^[[:space:]]*CN=/, "")
+          print
+          exit
+        }
+      '
+  ) || return
+
+  san_output=$(
+    printf '%s\n' "$certificate" |
+      command openssl x509 -noout -ext subjectAltName 2>/dev/null
+  ) || san_output=""
+
+  printf 'Common Name:\n%s\n' "${common_name:-(not present)}"
+  printf '\nSubject Alternative Names:\n'
+  if [[ -z "$san_output" ||
+    "$san_output" != *'Subject Alternative Name'* ]]; then
+    printf '(not present)\n'
+    return
+  fi
+
+  printf '%s\n' "$san_output" |
+    command awk '
+      NR == 1 { next }
+      {
+        line = $0
+        sub(/^[[:space:]]+/, "", line)
+        count = split(line, entries, /,[[:space:]]*/)
+        for (entry_index = 1; entry_index <= count; entry_index++) {
+          sub(/^DNS:/, "", entries[entry_index])
+          print entries[entry_index]
+        }
       }
-    }
-    /Subject Alternative Name/ {
-      # The SANs are on the next line, so we use getline
-      getline;
-      # Remove all whitespace and "DNS:" prefixes
-      gsub(/DNS:| /, "");
-      # Replace commas with newlines
-      gsub(/,/, "\n");
-      print "\nSubject Alternative Name(s):";
-      print;
+    '
+}
+
+# Open the current directory or the supplied locations.
+o() {
+  if (( $# == 0 )); then
+    _open .
+  else
+    _open "$@"
+  fi
+}
+
+# Display a colored tree and page long output.
+tre() {
+  _require_command tree || return
+  _require_command less || return
+  setopt local_options pipe_fail
+  command tree \
+    -aC \
+    -I '.git|node_modules|bower_components' \
+    --dirsfirst \
+    "$@" |
+    command less -FRNX
+}
+
+# Download once, verify its SHA-256 digest, and print only verified content.
+checksum() {
+  local url expected temporary_file digest_output actual
+
+  if (( $# < 1 || $# > 2 )); then
+    printf 'Usage: checksum <https-url> [sha256]\n' >&2
+    return 2
+  fi
+
+  url="$1"
+  expected="${2:-}"
+  if [[ -n "$expected" ]] &&
+    { (( ${#expected} != 64 )) || [[ "$expected" == *[^[:xdigit:]]* ]]; }; then
+    printf 'ERROR: Expected digest must be a 64-character SHA-256 value.\n' >&2
+    return 2
+  fi
+
+  _require_command curl || return
+  temporary_file=$(command mktemp -t checksum.XXXXXX) || return
+  (
+    trap 'command rm -f -- "$temporary_file"' EXIT HUP INT TERM
+
+    command curl \
+      --fail \
+      --silent \
+      --show-error \
+      --location \
+      --proto '=https' \
+      --tlsv1.2 \
+      --output "$temporary_file" \
+      "$url" || exit
+
+    if command -v shasum >/dev/null 2>&1; then
+      digest_output=$(command shasum -a 256 "$temporary_file") || exit
+    elif command -v sha256sum >/dev/null 2>&1; then
+      digest_output=$(command sha256sum "$temporary_file") || exit
+    else
+      printf 'ERROR: Neither shasum nor sha256sum is installed.\n' >&2
+      exit 127
+    fi
+    actual="${digest_output%% *}"
+
+    if [[ -z "$expected" ]]; then
+      printf '%s\n' "$actual"
+      exit
+    fi
+
+    expected="${expected:l}"
+    if [[ "$actual" != "$expected" ]]; then
+      printf 'ERROR: Checksum verification failed.\n' >&2
+      printf 'Expected: %s\nActual:   %s\n' "$expected" "$actual" >&2
+      exit 1
+    fi
+
+    command cat -- "$temporary_file"
+  )
+}
+
+# Pull the current Git repository and immediate child repositories.
+gitup() {
+  local -a candidates
+  local directory repository_root
+  local exit_code=0
+
+  _require_command git || return
+  candidates=("$PWD" "$PWD"/*(/N))
+
+  for directory in "${candidates[@]}"; do
+    repository_root=$(command git -C "$directory" rev-parse --show-toplevel 2>/dev/null) || continue
+    if [[ "${directory:A}" != "${repository_root:A}" ]]; then
+      continue
+    fi
+
+    printf 'Updating %s...\n' "$directory"
+    command git -C "$directory" pull --ff-only --prune || exit_code=1
+  done
+
+  return "$exit_code"
+}
+
+# Remove conventional Rust target directories from the current project level.
+clean_rust_targets() {
+  local -a manifests
+  local manifest target_directory
+  local exit_code=0
+
+  if (( $# != 0 )); then
+    printf 'Usage: clean_rust_targets\n' >&2
+    return 2
+  fi
+
+  manifests=("$PWD"/Cargo.toml(N) "$PWD"/*/Cargo.toml(N))
+  for manifest in "${manifests[@]}"; do
+    target_directory="${manifest:h}/target"
+    [[ -d "$target_directory" ]] || continue
+
+    printf 'Removing %s...\n' "$target_directory"
+    command rm -rf -- "$target_directory" || exit_code=1
+  done
+
+  return "$exit_code"
+}
+
+# Backward-compatible wrapper for the old misspelled name.
+earse-target() {
+  printf 'WARNING: earse-target is deprecated; use clean_rust_targets.\n' >&2
+  clean_rust_targets "$@"
+}
+
+# Remove Maven markers created by failed artifact downloads.
+maven_clean_failed_downloads() {
+  local repository_root="$HOME/.m2/repository"
+
+  [[ -d "$repository_root" ]] || return
+  command find "$repository_root" \
+    -type f \
+    -name '*.lastUpdated' \
+    -exec grep -q 'Could not transfer' {} \; \
+    -print \
+    -delete
+}
+
+# Backward-compatible name.
+mavenclean() {
+  maven_clean_failed_downloads "$@"
+}
+
+# Backward-compatible alias for mkd.
+md() {
+  mkd "$@"
+}
+
+# Open the current GitHub repository, including jj-backed repositories.
+openg() {
+  local repository remote_output current_branch default_branch
+
+  _require_command gh || return
+  _require_command git || return
+  current_branch=$(command git branch --show-current) || return
+  default_branch=$(command git config --get init.defaultBranch 2>/dev/null) ||
+    default_branch=""
+  if [[ -n "$current_branch" && -n "$default_branch" &&
+    "$current_branch" != "$default_branch" ]]; then
+    command gh pr view --web
+    return
+  fi
+
+  command gh repo view --web
+}
+
+# Individual Gradle cache files must not be removed by access time.
+gradleclean() {
+  printf '%s\n' \
+    'ERROR: gradleclean is disabled because partial cache deletion is unsafe.' \
+    'Use the project clean task or remove a complete cache intentionally.' >&2
+  return 2
+}
+
+# Preview a readable text file with the best available pager.
+preview() {
+  if (( $# != 1 )); then
+    printf 'Usage: preview <file>\n' >&2
+    return 2
+  fi
+  if [[ ! -f "$1" || ! -r "$1" ]]; then
+    printf 'ERROR: File is not readable: %s\n' "$1" >&2
+    return 1
+  fi
+
+  if [[ "${1:l}" == *.md ]] && command -v glow >/dev/null 2>&1; then
+    command glow -p -- "$1"
+  elif command -v bat >/dev/null 2>&1; then
+    command bat --paging=always -- "$1"
+  elif command -v less >/dev/null 2>&1; then
+    command less -- "$1"
+  else
+    command sed -n '1,200p' -- "$1"
+  fi
+}
+
+# Run Yazi and change to its final directory.
+y() {
+  local temporary_file final_directory
+  local yazi_status cd_status=0
+
+  _require_command yazi || return
+  temporary_file=$(command mktemp -t yazi-cwd.XXXXXX) || return
+
+  command yazi "$@" --cwd-file="$temporary_file"
+  yazi_status=$?
+
+  if [[ -r "$temporary_file" ]]; then
+    IFS= read -r -d '' final_directory <"$temporary_file" || :
+    if [[ -n "$final_directory" && "$final_directory" != "$PWD" ]]; then
+      builtin cd -- "$final_directory" || cd_status=$?
+    fi
+  fi
+
+  command rm -f -- "$temporary_file"
+  (( cd_status == 0 )) || return "$cd_status"
+  return "$yazi_status"
+}
+
+# Trim leading and trailing whitespace while preserving internal whitespace.
+trim() {
+  command awk '
+    {
+      sub(/^[[:space:]]+/, "")
+      sub(/[[:space:]]+$/, "")
+      print
     }
   '
-
-  return 0
-}
-
-# Normalize `open` across Linux, macOS, and Windows.
-# This is needed to make the `o` function (see below) cross-platform.
-if [ ! "$(uname -s)" = 'Darwin' ]; then
-	if grep -q Microsoft /proc/version; then
-		# Ubuntu on Windows using the Linux subsystem
-		alias open='explorer.exe'
-	else
-		alias open='xdg-open'
-	fi
-fi
-
-# `o` with no arguments opens the current directory, otherwise opens the given
-# location
-function o() {
-	if [ $# -eq 0 ]; then
-		open .
-	else
-		open "$@"
-	fi
-}
-
-# `tre` is a shorthand for `tree` with hidden files and color enabled, ignoring
-# the `.git` directory, listing directories first. The output gets piped into
-# `less` with options to preserve color and line numbers, unless the output is
-# small enough for one screen.
-function tre() {
-	tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX
-}
-
-# Checksum.sh is a simple way to download, review, and verify install scripts. If the checksum is OK the script will be printed to stdout, which can be piped to sh or elsewhere. If the checksum doesn't match it produces an error and nothing is piped.
-# For example, to install Rust:
-# checksum https://sh.rustup.rs 8327fa6ce106d2a387fdd02cb95c3607193c2edb | sh
-# source: https://github.com/gavinuhma/checksum.sh
-function checksum() {
-	local s
-	s=$(curl -fsSL "$1")
-	local h
-	if command -v shasum >/dev/null; then
-		h=shasum
-	else
-		h=sha1sum
-	fi
-	if [ ! "$2" ]; then
-		printf %s\\n "$s" | "$h" | awk '{print $1}'
-		return 1
-	fi
-	printf %s\\n "$s" | "$h" --check --status <(printf '%s  -\n' "$2") || {
-		echo "checksum failed" >&2
-		return 1
-	}
-	printf %s\\n "$s"
-}
-
-# Update all git repositories under the current path
-function gitup() {
-	function up() {
-		if [ -d "$1/.git" ]; then
-			echo "Updating $1…"
-			cd "$1" || exit
-			git pull --prune
-		fi
-	}
-  local cwd="$PWD"
-	up "$PWD"
-	for d in "${PWD}"/*/; do
-		up "$d"
-	done
-	builtin cd -- "$cwd"
-}
-
-function earse-target() {
-	for d in "${PWD}"/*/; do
-		if [ -d "$d/target" ]; then
-			echo "Cleaning target $d…"
-			(
-				cd "$d" || exit
-				/bin/rm -rf target
-			)
-		fi
-	done
-}
-
-# function cargo-update() {
-	# https://github.com/rust-lang/cargo/issues/9527
-# 	cargo install "$(cargo install --list | grep -E '^[a-z0-9_-]+ v[0-9.]+:$' | cut -f1 -d' ')"
-# }
-
-function mavenclean() {
-	# https://stackoverflow.com/questions/5074063/maven-error-failure-to-transfer
-	find ~/.m2 -name "*.lastUpdated" -exec grep -q "Could not transfer" {} \; -print -exec rm {} \;
-}
-
-function md() {
-	mkdir -p "$1" && cd "$1" || exit
-}
-
-function openg() {
-	local repo
-	if [[ -d '.jj' ]]; then
-		repo=$(jj git remote list | awk 'NR==1 {print $2}')
-	fi
-	gh repo view "$repo" -w
-}
-
-function gradleclean() {
-	# https://github.com/gradle/gradle/issues/2304
-	find ~/.gradle/caches -type f -atime +30 -delete -print
-	find ~/.gradle/caches -type d -mindepth 1 -empty -delete -print
-}
-
-preview() {
-  # 1. Check if a file path was provided as an argument
-  if [ -z "$1" ]; then
-    echo "Usage: preview <file>"
-    return 1
-  fi
-
-  # 2. Check if the file actually exists
-  if [ ! -e "$1" ]; then
-    echo "File not found: $1"
-    return 1
-  fi
-
-  # 3. Check if the file has a .md extension
-  if [[ "$1" == *.md ]]; then
-    # 4. Check if the 'glow' command is available
-    if command -v glow &> /dev/null; then
-      glow -p "$1"
-    else
-      # Fallback if glow is not installed
-      echo "'glow' not found, falling back to 'bat'."
-      bat "$1"
-    fi
-  else
-    # 5. Use 'bat' for any other file type
-    bat "$1"
-  fi
-}
-
-# https://yazi-rs.github.io/docs/quick-start
-function y() {
-	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
-	yazi "$@" --cwd-file="$tmp"
-	IFS= read -r -d '' cwd < "$tmp"
-	[ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
-	rm -f -- "$tmp"
-}
-
-# https://unix.stackexchange.com/questions/102008/how-do-i-trim-leading-and-trailing-whitespace-from-each-line-of-some-output
-function trim() {
-    awk '{$1=$1};1'
 }
