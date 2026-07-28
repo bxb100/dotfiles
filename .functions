@@ -510,14 +510,15 @@ checksum() {
 # Pull the current Git repository and immediate child repositories.
 gitup() {
   local -a candidates
-  local directory
+  local directory repository_root
   local exit_code=0
 
   _require_command git || return
   candidates=("$PWD" "$PWD"/*(/N))
 
   for directory in "${candidates[@]}"; do
-    if ! command git -C "$directory" rev-parse --git-dir >/dev/null 2>&1; then
+    repository_root=$(command git -C "$directory" rev-parse --show-toplevel 2>/dev/null) || continue
+    if [[ "${directory:A}" != "${repository_root:A}" ]]; then
       continue
     fi
 
