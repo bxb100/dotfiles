@@ -15,8 +15,6 @@ brew install tree
 brew install shellcheck
 # find 替代品
 brew install fd
-# 感觉比 rename 好用
-brew install mmv
 # tailscale 比较好用, 替代 frp 也可以
 brew install tailscale
 # 简单容器
@@ -35,3 +33,8 @@ brew install eza
 brew install yazi
 # https://github.com/pranshuparmar/witr#81-homebrew-macos--linux
 brew install witr
+
+# https://mise.jdx.dev/installing-mise.html
+brew install mise
+# https://github.com/kunobi-ninja/kache
+mise use -g github:kunobi-ninja/kache@latest
